@@ -17,8 +17,10 @@
 #include "lib\Vector\src\Vector.dm"
 #include "src\Ball.dm"
 #include "src\Client.dm"
+#include "src\CollisionParticles.dm"
 #include "src\Mob.dm"
 #include "src\PlaneMaster.dm"
 #include "src\Turf.dm"
+#include "src\Vector.dm"
 #include "src\World.dm"
 // END_INCLUDE
