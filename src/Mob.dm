@@ -1,0 +1,3 @@
+
+mob
+	density = FALSE

@@ -1,0 +1,23 @@
+// DM Environment file for Balls2.dme.
+// All manual changes should be made outside the BEGIN_ and END_ blocks.
+// New source code should be placed in .dm files: choose File/New --> Code File.
+
+// BEGIN_INTERNALS
+// END_INTERNALS
+
+// BEGIN_FILE_DIR
+#define FILE_DIR .
+// END_FILE_DIR
+
+// BEGIN_PREFERENCES
+#define DEBUG
+// END_PREFERENCES
+
+// BEGIN_INCLUDE
+#include "src\Ball.dm"
+#include "src\Client.dm"
+#include "src\Mob.dm"
+#include "src\PlaneMaster.dm"
+#include "src\Turf.dm"
+#include "src\World.dm"
+// END_INCLUDE
