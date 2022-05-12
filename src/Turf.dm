@@ -5,6 +5,11 @@ turf/back
 	plane = -1
 
 turf/wall
-	density = TRUE
 	icon = 'rsc/square.dmi'
 	color = rgb(50, 50, 50)
+
+	var/vector/normal
+
+	New(loc, vector/normal)
+		..()
+		src.normal = normal
