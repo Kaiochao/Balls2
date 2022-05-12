@@ -14,6 +14,7 @@
 // END_PREFERENCES
 
 // BEGIN_INCLUDE
+#include "lib\Vector\src\Vector.dm"
 #include "src\Ball.dm"
 #include "src\Client.dm"
 #include "src\Mob.dm"
