@@ -7,6 +7,7 @@ obj/ball
 
 	var/vector/velocity
 	var/radius = 128
+	var/mass
 
 	New()
 		..()
@@ -16,6 +17,7 @@ obj/ball
 		color = rgb(rand(360), 100, 100, space = COLORSPACE_HSV)
 		velocity = Vector.north.Turn(rand() * 360) * 32
 		radius = rand(8, 64)
+		mass = radius ** 2
 		transform *= radius / 128
 		bound_width = \
 		bound_height = radius * 2
@@ -75,19 +77,19 @@ obj/ball
 	proc/_Separate(obj/ball/other)
 		var/vector/to_other = _To(other)
 		var/vector/overlap = to_other.WithLength(radius + other.radius - to_other.Length())
-		Step(overlap / -2)
-		other.Step(overlap / 2)
+		Step(overlap * (-other.mass / (mass + other.mass)))
+		other.Step(overlap * (mass / (mass + other.mass)))
 
 	proc/_IsApproaching(obj/ball/other)
 		return velocity.Dot(_To(other)) > 0
 
 	proc/_Bounce(obj/ball/other)
-		var/vector/to_other = _To(other)
-		return to_other * ((velocity.Dot(to_other) - other.velocity.Dot(to_other)) / to_other.LengthSquared())
+		var/vector/normal = _To(other).Direction()
+		return normal * (2 * (velocity.Dot(normal) - other.velocity.Dot(normal)) / (mass + other.mass))
 
 	proc/_ApplyBounce(obj/ball/other, vector/bounce)
-		velocity -= bounce
-		other.velocity += bounce
+		velocity -= bounce * other.mass
+		other.velocity += bounce * mass
 
 	proc/_SpawnCollisionEffect(obj/ball/other, vector/bounce)
 		new/obj/collision_particles(
