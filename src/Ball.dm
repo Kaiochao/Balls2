@@ -3,15 +3,24 @@ var/list/Balls = new
 var/BallCollision = TRUE
 
 obj/ball
-	icon = 'rsc/circle.dmi'
+	icon = 'rsc/circle256.dmi'
 
 	var/vector/velocity
+	var/radius = 128
 
 	New()
 		..()
+		pixel_w += (32 - 256) / 2
+		pixel_z += (32 - 256) / 2
 		Balls += src
 		color = rgb(rand(360), 100, 100, space = COLORSPACE_HSV)
 		velocity = Vector.north.Turn(rand() * 360) * 32
+		radius = rand(8, 64)
+		transform *= radius / 128
+		bound_width = \
+		bound_height = radius * 2
+		bound_x = \
+		bound_y = (32 - bound_width) / 2
 
 	Del()
 		Balls -= src
@@ -35,51 +44,45 @@ obj/ball
 
 	proc/_Simulate()
 		Step(velocity * world.tick_lag)
-		_BounceOffWalls()
+		_CollideWithWalls()
 		if(BallCollision)
-			_BounceOffBalls()
+			_CollideWithBalls()
 
-	proc/_BounceOffWalls()
+	proc/_CollideWithWalls()
 		for(var/turf/wall/wall in obounds())
-			_BounceOffWall(wall)
+			var/vector/overlap = wall.normal * -bounds_dist(src, wall)
+			Step(overlap)
+			var/is_approaching = velocity.Dot(wall.normal) < 0
+			if(is_approaching)
+				velocity = velocity.Bounce(wall.normal)
 
-	proc/_BounceOffWall(turf/wall/wall)
-		var/vector/overlap = wall.normal.WithLength(bounds_dist(src, wall))
-		Step(-overlap)
-		var/is_approaching = velocity.Dot(wall.normal) < 0
-		if(is_approaching)
-			velocity = velocity.Bounce(wall.normal)
-
-	proc/_BounceOffBalls()
+	proc/_CollideWithBalls()
 		for(var/obj/ball/other in obounds())
-			_BounceOffBall(other)
-
-	proc/_BounceOffBall(obj/ball/other)
-		if(_IsOverlapping(other))
-			_Separate(other)
-			if(_IsApproaching(other))
-				var/vector/bounce = _Bounce(other)
-				_ApplyBounce(other, bounce)
-				_SpawnCollisionEffect(other, bounce)
+			if(_IsOverlapping(other))
+				_Separate(other)
+				if(_IsApproaching(other))
+					var/vector/bounce = _Bounce(other)
+					_ApplyBounce(other, bounce)
+					_SpawnCollisionEffect(other, bounce)
 
 	proc/_IsOverlapping(obj/ball/other)
-		var/vector/to_other = other.Position() - Position()
+		var/vector/to_other = _To(other)
 		var/distance_squared = to_other.LengthSquared()
 		var/is_concentric = distance_squared == 0
-		var/is_overlapping = distance_squared < 32 * 32
+		var/is_overlapping = distance_squared < (radius + other.radius) ** 2
 		return !is_concentric && is_overlapping
 
 	proc/_Separate(obj/ball/other)
-		var/vector/to_other = other.Position() - Position()
-		var/vector/overlap = to_other.WithLength(32 - to_other.Length())
+		var/vector/to_other = _To(other)
+		var/vector/overlap = to_other.WithLength(radius + other.radius - to_other.Length())
 		Step(overlap / -2)
 		other.Step(overlap / 2)
 
 	proc/_IsApproaching(obj/ball/other)
-		return velocity.Dot(other.Position() - Position()) > 0
+		return velocity.Dot(_To(other)) > 0
 
 	proc/_Bounce(obj/ball/other)
-		var/vector/to_other = other.Position() - Position()
+		var/vector/to_other = _To(other)
 		return to_other * ((velocity.Dot(to_other) - other.velocity.Dot(to_other)) / to_other.LengthSquared())
 
 	proc/_ApplyBounce(obj/ball/other, vector/bounce)
@@ -87,7 +90,10 @@ obj/ball
 		other.velocity += bounce
 
 	proc/_SpawnCollisionEffect(obj/ball/other, vector/bounce)
-		var/vector/position_between = (Position() + other.Position()) / 2
-		var/obj/collision_particles/effect = new(position_between)
-		effect.particles.count = round(bounce.Length())
-		effect.particles.color = gradient(color, other.color, space = COLORSPACE_HSV, index = 0.5)
+		new/obj/collision_particles(
+			(Position() + other.Position()) / 2,
+			round(bounce.Length()),
+			gradient(color, other.color, index = 0.5))
+
+	proc/_To(obj/ball/other)
+		return other.Position() - Position()

@@ -3,7 +3,7 @@ world
 	maxx = 50
 	maxy = 50
 	view = 35
-	fps = 40
+	fps = 25
 	turf = /turf/back
 
 	New()
